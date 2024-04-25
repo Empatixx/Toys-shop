@@ -38,17 +38,21 @@ def user_login(request):
             return redirect('home')  # Redirect to a home page or some other page
     else:
         form = AuthenticationForm()
-    return render(request, 'login/login.html', {'form': form})
+    return render(request, 'login/login2.html', {'form': form})
 
 
 def home(request):
     return render(request, 'home.html')
 
 def products(request):
-    product_list = Product.objects.all()
+    search_query = request.GET.get('search_query', '')
+    if search_query:
+        products = Product.objects.filter(name__icontains=search_query)
+    else:
+        products = Product.objects.all()
     categories = Category.objects.all()
-    print(categories)
-    return render(request, 'products/products.html', {'product_list': product_list, 'category_list': categories})
+
+    return render(request, 'products/products2.html', {'product_list': products, 'category_list': categories})
 
 def orders(request):
     if not request.user.is_authenticated:
@@ -69,9 +73,14 @@ def manage_orders(request):
     # Logic to fetch and manage orders
     return render(request, 'manage_orders/manage_orders.html')
 
+
 def manage_categories(request):
-    # Logic to fetch and manage orders
-    categories = Category.objects.all()
+    search_query = request.GET.get('search_query', '').strip()
+    if search_query:
+        categories = Category.objects.filter(name__icontains=search_query)
+    else:
+        categories = Category.objects.all()
+
     return render(request, 'manage_categories/manage_categories.html', {'categories': categories})
 
 def add_product(request):
@@ -106,6 +115,26 @@ def create_category(request):
     # Redirect back to the form page or handle accordingly if it's not a POST request
     return redirect('manage_categories')
 
+def edit_category(request, category_id):
+    category = get_object_or_404(Category, pk=category_id)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        if name and description:
+            category.name = name
+            category.description = description
+            category.save()
+            return redirect('manage_categories')
+        else:
+            return HttpResponse("Both name and description are required.", status=400)
+    return redirect('manage_categories')
+
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, pk=category_id)
+    if request.method == 'POST':
+        category.delete()
+        return redirect('manage_categories')
+    return redirect('manage_categories')
 
 def delete_product(request, product_id):
     if request.method == 'POST':  # Ensure this is a POST request

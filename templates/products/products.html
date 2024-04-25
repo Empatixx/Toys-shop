@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,22 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .nav-item:nth-child(odd) .nav-link {
+            background-color: #343a40; /* Darker gray */
+            color: #ffffff; /* White text */
+        }
+
+        .nav-item:nth-child(even) .nav-link {
+            background-color: #495057; /* Lighter gray */
+            color: #ffffff; /* White text */
+        }
+
+        .nav-item .nav-link.active {
+            background-color: #007bff; /* Bootstrap primary color for active */
+            color: #ffffff;
+        }
+    </style>
 </head>
 <body>
 <div class="container-fluid position-relative">
@@ -16,7 +32,7 @@
     </div>
 </div>
 <div class="container mt-3">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'home' %}">Shopify</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavTabs"
@@ -49,9 +65,15 @@
     </nav>
     <div class="container mb-4">
         <h2 class="mt-4">Seznam produktů</h2>
-        <button type="button" class="btn btn-success mt-4" data-toggle="modal" data-target="#addProductModal">Přidat
-            nový produkt
+        <form action="{% url 'products' %}" method="get" class="d-flex mb-3">
+            <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search"
+                   name="search_query" style="font-size: 1.25rem;">
+            <button class="btn btn-outline-success" type="submit" style="font-size: 1.25rem;">Search</button>
+        </form>
+        <button type="button" class="btn btn-success mt-2" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            Přidat nový produkt
         </button>
+
     </div>
     <div class="row">
         {% for product in product_list %}
@@ -64,18 +86,14 @@
                             <h3 class="card-title my-auto" style="flex-grow: 1;">{{ product.name }}</h3>
                             <!-- Action Buttons -->
                             <div>
-                                <button type="button" class="btn btn-warning" data-toggle="modal"
-                                        data-target="#editProductModal{{ product.id }}">
+                                <button type="button" class="btn btn-warning" data-bs-toggle="modal"
+                                        data-bs-target="#editProductModal{{ product.id }}">
                                     <span class="material-icons">edit</span>
                                 </button>
-                                <form action="{% url 'delete_product' product.id %}" method="post"
-                                      style="display: inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger"
-                                            onclick="return confirm('Are you sure you want to delete this product?');">
-                                        <span class="material-icons">delete</span>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteProductModal{{ product.id }}">
+                                    <span class="material-icons">delete</span>
+                                </button>
                             </div>
                         </div>
                         <p class="card-text">{{ product.description }}</p>
@@ -89,48 +107,71 @@
                     </div>
                 </div>
             </div>
-            <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1" aria-labelledby="editProductModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+            <div class="modal fade" id="deleteProductModal{{ product.id }}" tabindex="-1"
+                 aria-labelledby="deleteProductModal{{ product.id }}" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteProductModalLabel{{ product.id }}">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete "{{ product.name }}"?
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" action="{% url 'delete_product' product.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-                <form method="post" action="{% url 'edit_product' product.id %}">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="name">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}"
-                                   required>
-                        </div>
-                        <div class="form-group">
-                            <label for="description">Description</label>
-                            <textarea class="form-control" id="description" name="description"
-                                      required>{{ product.description }}</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="price">Price</label>
-                            <input type="number" class="form-control" id="price" name="price"
-                                   value="{{ product.price }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="amount_left">Amount Left</label>
-                            <input type="number" class="form-control" id="amount_left" name="amount_left"
-                                   value="{{ product.amount_left }}" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
-                    </div>
-                </form>
             </div>
-        </div>
-    </div>
+            <div class="modal fade" id="editProductModal{{ product.id }}" tabindex="-1"
+                 aria-labelledby="editProductModalLabel"
+                 aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header"
+                             style="display: flex; justify-content: space-between; align-items: center;">
+                            <h5 class="modal-title" id="editProductModalLabel">Edit product</h5>
+                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                <span class="material-icons" aria-hidden="true">close</span>
+                            </button>
+                        </div>
+                        <form method="post" action="{% url 'edit_product' product.id %}">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="name">Name</label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                           value="{{ product.name }}"
+                                           required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="description">Description</label>
+                                    <textarea class="form-control" id="description" name="description"
+                                              required>{{ product.description }}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label for="price">Price</label>
+                                    <input type="number" class="form-control" id="price" name="price"
+                                           value="{{ product.price }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="amount_left">Amount Left</label>
+                                    <input type="number" class="form-control" id="amount_left" name="amount_left"
+                                           value="{{ product.amount_left }}" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         {% empty %}
             <div class="col">
                 <p>Žádné produkty k zobrazení.</p>
@@ -143,40 +184,45 @@
          aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h5 class="modal-title" id="addProductModalLabel">Přidat produkt</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span class="material-icons" aria-hidden="true">close</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <form action="{% url 'add_product' %}" method="post">
                         {% csrf_token %}
-                        <div class="form-group">
-                            <label for="productName">Název produktu</label>
-                            <input type="text" class="form-control" id="productName" name="productName" required>
+                        <div class="modal-body">
+
+                            <div class="form-group">
+                                <label for="productName">Název produktu</label>
+                                <input type="text" class="form-control" id="productName" name="productName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Popis</label>
+                                <textarea class="form-control" id="description" name="description" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="price">Cena</label>
+                                <input type="number" class="form-control" id="price" name="price" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="amount_left">Množství</label>
+                                <input type="number" class="form-control" id="amount_left" name="amount_left" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="category">Kategorie</label>
+                                <select class="form-control" id="category" name="category" required>
+                                    {% for category in category_list %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="description">Popis</label>
-                            <textarea class="form-control" id="description" name="description" required></textarea>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Uložit produkt</button>
                         </div>
-                        <div class="form-group">
-                            <label for="price">Cena</label>
-                            <input type="number" class="form-control" id="price" name="price" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="amount_left">Množství</label>
-                            <input type="number" class="form-control" id="amount_left" name="amount_left" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="category">Kategorie</label>
-                            <select class="form-control" id="category" name="category" required>
-                                {% for category in category_list %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary">Uložit produkt</button>
                     </form>
                 </div>
             </div>
@@ -185,8 +231,8 @@
 </div>
 
 <!-- Bootstrap JS and its dependencies -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
+        crossorigin="anonymous"></script>
 </body>
 </html>

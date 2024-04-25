@@ -34,6 +34,8 @@ urlpatterns = [
     path('manage_orders/', views.manage_orders, name='manage_orders'),
     path('manage_categories/', views.manage_categories, name='manage_categories'),
     path('create_category/', views.create_category, name='create_category'),
+    path('delete_category/<int:category_id>/', views.delete_category, name='delete_category'),
+    path('edit_category/<int:category_id>/', views.edit_category, name='edit_category'),
     path('logout/', views.logout_view, name='logout'),
     path('', views.home, name='home'),
 ]
