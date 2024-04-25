@@ -1,0 +1,39 @@
+"""
+URL configuration for SkjProjekt project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.0/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+from django.contrib import admin
+from django.urls import path
+from django.urls import path
+from Obchod import views
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('register/', views.register, name='register'),
+    path('login/', views.user_login, name='login'),
+
+    path('products/', views.products, name='products'),
+    path('add_product/', views.add_product, name='add_product'),
+    path('delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
+    path('edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
+
+    path('orders/', views.orders, name='orders'),
+    path('manage_employees/', views.manage_employees, name='manage_employees'),
+    path('manage_orders/', views.manage_orders, name='manage_orders'),
+    path('manage_categories/', views.manage_categories, name='manage_categories'),
+    path('create_category/', views.create_category, name='create_category'),
+    path('logout/', views.logout_view, name='logout'),
+    path('', views.home, name='home'),
+]
