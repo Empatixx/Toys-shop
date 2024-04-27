@@ -1,0 +1,61 @@
+.bi {
+    vertical-align: -.125em;
+    fill: currentColor;
+}
+
+
+.nav-scroller .nav {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-bottom: 1rem;
+    margin-top: -1px;
+    overflow-x: auto;
+    text-align: center;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.bd-mode-toggle .dropdown-menu .active .bi {
+    display: block !important;
+}
+
+.container {
+    /* Main content styles if necessary */
+}
+
+.messages {
+    position: fixed; /* or 'absolute' if you want it relative to a positioned parent */
+    top: 10px;
+    right: 10px;
+    z-index: 1050; /* High z-index to ensure it appears above other content */
+    width: auto;
+}
+
+.dropdown a.dropdown-toggle {
+    background: none;
+    border: none;
+    color: inherit; /* or any color you want for the icon */
+    text-decoration: none; /* removes underline */
+}
+
+.dropdown a.dropdown-toggle:hover, .dropdown a.dropdown-toggle:focus {
+    text-decoration: none; /* keeps underline from appearing on hover/focus */
+    color: inherit; /* keeps the color consistent on hover */
+}
+
+html, body {
+    height: 100%; /* Ensure full-height body */
+    margin: 0; /* Remove default margin */
+}
+
+main {
+    min-height: 85vh;
+    /* fallback for old browsers */
+    background: #6a11cb;
+
+    /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1));
+
+    /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+    background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))
+}
