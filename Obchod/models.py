@@ -32,6 +32,7 @@ class Order(models.Model):
     address = models.CharField(max_length=100)
     city = models.CharField(max_length=32)
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
+    state = models.CharField(max_length=32)
 
 class OrderState(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -44,6 +45,13 @@ class Review(models.Model):
     created_at = models.DateTimeField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def average_rating(self):
+        reviews = self.review_set.all()
+        if reviews:
+            return sum(review.rating for review in reviews) / len(reviews)
+        else:
+            return 0
 
 class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

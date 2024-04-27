@@ -11,6 +11,7 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'global.css' %}">
+
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
         <symbol id="bootstrap" viewBox="0 0 118 94">
             <title>Bootstrap</title>
@@ -48,27 +49,20 @@
                 <img src="{% static 'logo.svg' %}" role="img" class="bi me-2" width="80" height="64">
             </a>
 
+
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
                 <li><a href="{% url 'products' %}" class="nav-link px-3 text-white"><p class="h4">Products</p></a></li>
-                <li><a href="{% url 'orders' %}" class="nav-link px-3 text-warning"><p class="h4">Orders</p></a></li>
-                <li><a href="{% url 'manage_orders' %}" class="nav-link px-3 text-white"><p class="h4">Manage orders</p></a></li>
-                <li><a href="{% url 'manage_employees' %}" class="nav-link px-3 text-white"><p class="h4">Manage employees</p></a></li>
-                <li><a href="{% url 'manage_categories' %}" class="nav-link px-3 text-white"><p class="h4">Manage categories</p></a></li>
+                <li><a href="{% url 'orders' %}" class="nav-link px-3 text-white"><p class="h4">Orders</p></a></li>
+                <li><a href="{% url 'manage_orders' %}" class="nav-link px-3 text-warning"><p class="h4">Manage
+                    orders</p></a></li>
+                <li><a href="{% url 'manage_employees' %}" class="nav-link px-3 text-white"><p class="h4">Manage
+                    employees</p></a></li>
+                <li><a href="{% url 'manage_categories' %}" class="nav-link px-3 text-white"><p class="h4">Manage
+                    categories</p></a></li>
             </ul>
 
             <div class="text-end">
                 <div class="d-flex align-items-center">  <!-- Flex container to align items inline -->
-                    <form class="d-inline me-2" action="{% url 'view_cart' %}" method="get">
-                        <button type="submit" class="btn btn-secondary position-relative">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
-                                 class="bi bi-cart" viewBox="0 0 16 16">
-                                <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"></path>
-                            </svg>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{ cart_item_count }}
-                        <span class="visually-hidden">items in cart</span>
-                    </span></button>
-                    </form>
                     {% if user.is_authenticated %}
                         <div class="dropdown">  <!-- Avatar Dropdown -->
                             <a href="#" class="dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown"
@@ -90,42 +84,103 @@
     </div>
 </header>
 <main>
-
     <div class="container-fluid py-3">
-        <div class="container mt-5">
-            <div class="card">
-                <div class="card-header">
-                    All Orders Overview
-                </div>
-                <div class="card-body">
+        <div class="card m-5">
+            <div class="card-header">
+                Orders Overview
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                    <tr class="table-row">
+                        <th>Order status</th>
+                        <th>Total items</th>
+                        <th>Expected delivery date</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>Customer</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
                     {% for order in orders %}
-                        <div class="row g-0 mb-3">
-                            <div class="col-md-4 d-flex align-items-center justify-content-center">
-                                <img src="
-                                        {% if order.state == 'Finished' %}{% static 'finished.svg' %}{% elif order.state == 'Shipping' %}{% static 'delivering.svg' %}{% else %}{% static 'processing.svg' %}{% endif %}"
-                                     class="img-fluid rounded-start" alt="Order State" width="100" height="100">
-                            </div>
-                            <div class="col-md-8">
-                                <div class="card-body">
-                                    <h5 class="card-title">Order #{{ order.id }}</h5>
-                                    <p class="card-text">Expected Delivery: {{ order.expected_delivery }}</p>
-                                    <p class="card-text"><small class="text-muted">Last
-                                        updated {{ order.state.created_at }}</small></p>
-                                    <a href="{% url 'order_details' order.id %}" class="btn btn-primary">View
-                                        Details</a>
-                                </div>
-                            </div>
-                        </div>
-                        {% if not forloop.last %}
-                            <hr> <!-- Divider between orders -->
-                        {% endif %}
+                        <tr>
+                            <td>{{ order.orderstate_set.last.state }}</td>
+                            <td>{{ order.orderproduct_set.count }}</td>
+                            <td>{{ order.expected_delivery|date:"Y-m-d H:i" }}</td>
+                            <td>{{ order.address }}</td>
+                            <td>{{ order.city }}</td>
+                            <td>{{ order.customer.username }}</td>
+                            <td>
+                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal"
+                                        data-bs-target="#editOrderModal{{ order.id }}">
+                                    Edit
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteOrderModal{{ order.id }}">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
                     {% endfor %}
-                </div>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
+    <!-- Edit Order Modal -->
+    {% for order in orders %}
+        <div class="modal fade" id="editOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="editOrderModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editOrderModalLabel">Edit Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="post" action="{% url 'edit_order' order.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="orderState" class="form-label">Order state</label>
+                                <select class="form-select" id="orderState" name="orderState">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Shipping">Shipping</option>
+                                    <option value="Finished">Finished</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="deleteOrderModal{{ order.id }}" tabindex="-1"
+             aria-labelledby="deleteOrderModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteOrderModalLabel">Delete Order</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to delete this order?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <form method="post" action="{% url 'delete_order' order.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
 </main>
-    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+<footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
     <div class="col-md-4 d-flex align-items-center">
         <a href="/" class="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
             <img src="{% static 'logo.svg' %}" role="img" class="bi me-2" width="30" height="24">
