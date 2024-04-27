@@ -310,6 +310,7 @@ def delete_product(request, product_id):
 def edit_product(request, product_id):
     product = get_object_or_404(Product, pk=product_id)
     if request.method == 'POST':
+        print(request.POST)
         product.name = request.POST.get('name')
         product.description = request.POST.get('description')
         product.price = request.POST.get('price')
@@ -450,7 +451,9 @@ def create_employee(request):
 
 def product_details(request, product_id):
     product = Product.objects.get(id=product_id)
+    category_list = Category.objects.all()
     return render(request, 'products/product_details.html', {
         'product': product,
+        'category_list': category_list,
         'cart_item_count': sum(request.session.get('cart', {}).values())
     })
