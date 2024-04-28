@@ -26,6 +26,12 @@ class Product(models.Model):
     amount_left = models.IntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     employee = models.ForeignKey(User, on_delete=models.CASCADE)
+    def average_rating(self):
+        reviews = self.review_set.all()
+        if reviews:
+            return sum(review.rating for review in reviews) / len(reviews)
+        else:
+            return 0
 
 class Order(models.Model):
     expected_delivery = models.DateTimeField()
@@ -45,13 +51,6 @@ class Review(models.Model):
     created_at = models.DateTimeField()
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     customer = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    def average_rating(self):
-        reviews = self.review_set.all()
-        if reviews:
-            return sum(review.rating for review in reviews) / len(reviews)
-        else:
-            return 0
 
 class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

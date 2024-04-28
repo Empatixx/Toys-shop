@@ -17,8 +17,6 @@
     <link rel="stylesheet" href="{% static 'rating.css' %}">
     <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/dist/tippy.css">
     <!-- Tippy.js JavaScript (including Popper.js) -->
-    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
-    <script src="https://unpkg.com/tippy.js@6/dist/tippy.min.js"></script>
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
         <symbol id="bootstrap" viewBox="0 0 118 94">
             <title>Bootstrap</title>
@@ -35,15 +33,6 @@
             <path d="M5.026 15c6.038 0 9.341-5.003 9.341-9.334 0-.14 0-.282-.006-.422A6.685 6.685 0 0 0 16 3.542a6.658 6.658 0 0 1-1.889.518 3.301 3.301 0 0 0 1.447-1.817 6.533 6.533 0 0 1-2.087.793A3.286 3.286 0 0 0 7.875 6.03a9.325 9.325 0 0 1-6.767-3.429 3.289 3.289 0 0 0 1.018 4.382A3.323 3.323 0 0 1 .64 6.575v.045a3.288 3.288 0 0 0 2.632 3.218 3.203 3.203 0 0 1-.865.115 3.23 3.23 0 0 1-.614-.057 3.283 3.283 0 0 0 3.067 2.277A6.588 6.588 0 0 1 .78 13.58a6.32 6.32 0 0 1-.78-.045A9.344 9.344 0 0 0 5.026 15z"></path>
         </symbol>
     </svg>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            tippy('#rating-tooltip', {
-                content: document.querySelector('#reviews-content').innerHTML,
-                allowHTML: true,
-                placement: 'bottom',
-            });
-        });
-    </script>
 </head>
 <body>
 {% if messages %}
@@ -156,7 +145,7 @@
                                     <div class="flex-grow-1 d-flex flex-column align-items-end">
                                         <!-- Ratings -->
                                         <div class="ratings mb-2">
-                                            {% with average=product.average_rating|floatformat:0 %}
+                                            {% with average=product.average_rating|floatformat:0|add:"0" %}
                                                 {% for i in "12345" %}
                                                     {% if forloop.counter <= average %}
                                                         <i class="fa fa-star rating-color"></i>  <!-- Filled star -->
@@ -166,7 +155,7 @@
                                                 {% endfor %}
                                             {% endwith %}
                                             <span class="text-body-secondary"
-                                                  id="rating-tooltip">({{ product.review_set.count }} reviews)</span>
+                                                  id="rating-tooltip">({{ product.review_set.count }})</span>
 
                                             <div id="reviews-content" style="display:none;">
                                                 {% for review in product.review_set.all %}
@@ -182,8 +171,11 @@
                                         </div>
                                         <!-- Buttons -->
                                         <div>
-
-                                            <button class="btn btn-warning me-2" data-bs-toggle="modal">Review me
+                                            <form method="post" action="{% url 'review' product.id %}"
+                                                  style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-warning me-2">Review</button>
+                                            </form>
                                             </button>
                                             <form method="post" action="{% url 'add_to_cart' product.id %}"
                                                   style="display: inline;">
@@ -197,6 +189,44 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h2>Reviews</h2>
+            <hr>
+            <div class="container">
+                {% for review in product.review_set.all %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                {{ review.customer.username }}
+                            </h5>
+                            <div class="row">
+                                <div class="col">
+                                    <p class="card-text">
+                                        {{ review.review_text }}
+                                    </p>
+                                </div>
+                                <div class="col text-end">
+                                    <div class="ratings">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fa fa-star
+                                                rating-color"></i>  <!-- Filled star -->
+                                            {% else %}
+                                                <i class="fa fa-star
+                                                "></i>  <!-- Unfilled star -->
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>

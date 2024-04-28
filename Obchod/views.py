@@ -11,7 +11,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.utils.timezone import now
 
-from .models import Product, Order, User, Category, OrderProduct, OrderState
+from .models import Product, Order, User, Category, OrderProduct, OrderState, Review
 
 
 def register(request):
@@ -457,3 +457,27 @@ def product_details(request, product_id):
         'category_list': category_list,
         'cart_item_count': sum(request.session.get('cart', {}).values())
     })
+
+
+def review(request, product_id):
+    product = Product.objects.get(id=product_id)
+    return render(request, 'review/review.html', {
+        'product': product,
+        'cart_item_count': sum(request.session.get('cart', {}).values())
+    })
+
+
+def create_review(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.method == 'POST':
+        product = Product.objects.get(id=product_id)
+        review_text = request.POST.get('review_text')
+        rating = request.POST.get('rating')
+        if not review_text or not rating:
+            messages.error(request, "Review text and rating are required.")
+            return redirect('review', product_id=product_id)
+        Review.objects.create(review_text=review_text, rating=rating, created_at=now(), product=product,
+                              customer=request.user)
+        return redirect('product_details', product_id=product_id)
+    return redirect('review', product_id=product_id)

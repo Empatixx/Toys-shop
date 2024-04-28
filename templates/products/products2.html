@@ -233,7 +233,7 @@
                                     </div>
                                     <div class="position-absolute top-50 end-0 translate-middle-y me-3">
                                         <div class="ratings">
-                                            {% with average=product.average_rating|floatformat:0 %}
+                                            {% with average=product.average_rating|floatformat:0|add:"0" %}
                                                 {% for i in "12345" %}
                                                     {% if forloop.counter <= average %}
                                                         <i class="fa fa-star rating-color"></i>
