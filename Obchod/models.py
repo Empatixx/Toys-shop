@@ -14,6 +14,10 @@ class User(AbstractUser):
         ('C', 'Customer')      # Customer
     ]
     role = models.CharField(max_length=1, choices=ROLE_CHOICES, default='C')
+    def is_manager(self):
+        return self.role == 'V'
+    def is_product_manager(self):
+        return self.role == 'S' or self.role == 'V'
 
 class Category(models.Model):
     name = models.CharField(max_length=100)

@@ -1,0 +1,25 @@
+<div class="card mb-2">
+    <div class="card-body">
+        <h5 class="card-title">
+            {{ review.customer.username }}
+        </h5>
+        <div class="row">
+            <div class="col">
+                <p class="card-text">
+                    {{ review.review_text }}
+                </p>
+            </div>
+            <div class="col text-end">
+                <div class="ratings">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            <i class="fa fa-star rating-color"></i>  <!-- Filled star -->
+                        {% else %}
+                            <i class="fa fa-star"></i>  <!-- Unfilled star -->
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

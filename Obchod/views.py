@@ -83,15 +83,15 @@ def user_login(request):
 
 def products(request):
     category_list = Category.objects.all()
-    selected_category = request.GET.get('category', None)
-    search_query = request.GET.get('search_query', '')
+    selected_category = request.GET.get('selected_category', None) # id
+    search_query = request.GET.get('search_query', None)
 
     products = Product.objects.all()
 
     if selected_category and search_query:
-        products = products.filter(category__name=selected_category, name__icontains=search_query).prefetch_related('review_set').order_by('price')
+        products = products.filter(category__id=selected_category, name__icontains=search_query).prefetch_related('review_set').order_by('price')
     elif selected_category:
-        products = products.filter(category__name=selected_category).prefetch_related('review_set').order_by('price')
+        products = products.filter(category__id=selected_category).prefetch_related('review_set').order_by('price')
     elif search_query:
         products = Product.objects.filter(name__icontains=search_query).prefetch_related('review_set').order_by('price')
     else:
@@ -100,6 +100,8 @@ def products(request):
         'category_list': category_list,
         'product_list': products,
         'cart_item_count': sum(request.session.get('cart', {}).values()),
+        'current_page': 'products',
+        'selected_category': selected_category
     })
 
 
@@ -149,7 +151,8 @@ def view_cart(request):
         'cart_item_count': total_items,
         'total_price': total_price,
         'total_amount': total_price,
-        'delivery_date': now().date() + timedelta(days=7)
+        'delivery_date': now().date() + timedelta(days=7),
+        'current_page': 'products'
     })
 
 
@@ -195,7 +198,8 @@ def orders(request):
 
     return render(request, 'orders/orders.html', {
         'orders': order_list,
-        'cart_item_count': sum(request.session.get('cart', {}).values())
+        'cart_item_count': sum(request.session.get('cart', {}).values()),
+        'current_page': 'orders'
     })
 
 
@@ -204,7 +208,10 @@ def manage_employees(request):
     if not request.user.is_authenticated:
         return redirect('login')
     employees = User.objects.all()
-    return render(request, 'manage_employees/manage_employees.html', {'employees': employees})
+    return render(request, 'manage_employees/manage_employees.html', {
+        'employees': employees,
+        'current_page': 'manage_employees'
+    })
 
 
 def delete_employee(request, employee_id):
@@ -230,7 +237,10 @@ def edit_employee(request, employee_id):
 def manage_orders(request):
     orders = Order.objects.all().select_related('customer').prefetch_related('orderstate_set').prefetch_related(
         "orderproduct_set")
-    return render(request, 'manage_orders/manage_orders2.html', {'orders': orders})
+    return render(request, 'manage_orders/manage_orders2.html', {
+        'orders': orders,
+        'current_page': 'manage_orders'
+    })
 
 
 def manage_categories(request):
@@ -240,7 +250,10 @@ def manage_categories(request):
     else:
         categories = Category.objects.all()
 
-    return render(request, 'manage_categories/manage_categories2.html', {'categories': categories})
+    return render(request, 'manage_categories/manage_categories2.html', {
+        'categories': categories,
+        'current_page': 'manage_categories'
+    })
 
 
 def add_product(request):
@@ -255,7 +268,7 @@ def add_product(request):
                               employee=request.user)
         new_product.save()
         return redirect('products')
-    return render(request, 'products')
+    return redirect('products')
 
 
 def create_category(request):
@@ -344,7 +357,8 @@ def order_details(request, order_id):
     return render(request, 'orders/order_details.html', {
         'order': order,
         'order_products': order_products,
-        'cart_item_count': sum(request.session.get('cart', {}).values())
+        'cart_item_count': sum(request.session.get('cart', {}).values()),
+        'current_page': 'orders'
     })
 
 
@@ -357,7 +371,7 @@ def create_order(request):
         cart = request.session.get('cart', {})
         if not cart:
             messages.error(request, "Your cart is empty.")
-            return redirect('cart')
+            return redirect('view_cart')
         if not customer.address or not customer.city:
             messages.error(request, "Please update your address and city in your profile.")
             return redirect('profile')
@@ -405,7 +419,7 @@ def create_order(request):
         return redirect('order_details', order_id=order.id)
 
     # Handle other HTTP methods or error cases
-    return redirect('cart')
+    return redirect('view_cart')
 
 
 def delete_order(request, order_id):
@@ -455,7 +469,8 @@ def product_details(request, product_id):
     return render(request, 'products/product_details.html', {
         'product': product,
         'category_list': category_list,
-        'cart_item_count': sum(request.session.get('cart', {}).values())
+        'cart_item_count': sum(request.session.get('cart', {}).values()),
+        'current_page': 'products'
     })
 
 
@@ -463,7 +478,8 @@ def review(request, product_id):
     product = Product.objects.get(id=product_id)
     return render(request, 'review/review.html', {
         'product': product,
-        'cart_item_count': sum(request.session.get('cart', {}).values())
+        'cart_item_count': sum(request.session.get('cart', {}).values()),
+        'current_page': 'products'
     })
 
 

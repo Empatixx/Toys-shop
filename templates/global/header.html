@@ -2,32 +2,60 @@
 <header class="p-3 text-bg-dark border-bottom">
     <div class="container">
         <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-            <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none">
                 <img src="{% static 'logo.svg' %}" role="img" class="bi me-2" width="80" height="64">
             </a>
             <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
-                <li><a href="{% url 'products' %}" class="nav-link px-3 text-warning"><p class="h4">Products</p></a></li>
-                <li><a href="{% url 'orders' %}" class="nav-link px-3 text-white"><p class="h4">Orders</p></a></li>
-                <li><a href="{% url 'manage_orders' %}" class="nav-link px-3 text-white"><p class="h4">Manage orders</p></a></li>
-                <li><a href="{% url 'manage_employees' %}" class="nav-link px-3 text-white"><p class="h4">Manage employees</p></a></li>
-                <li><a href="{% url 'manage_categories' %}" class="nav-link px-3 text-white"><p class="h4">Manage categories</p></a></li>
+                <li><a href="{% url 'products' %}"
+                       class="nav-link px-3 {% if current_page == 'products' %}text-warning{% else %}text-white{% endif %}">
+                    <p class="h4">Products</p></a></li>
+                <li><a href="{% url 'orders' %}"
+                       class="nav-link px-3 {% if current_page == 'orders' %}text-warning{% else %}text-white{% endif %}">
+                    <p class="h4">Orders</p></a></li>
+                {% if user.is_product_manager %}
+                    <li><a href="{% url 'manage_orders' %}"
+                           class="nav-link px-3 {% if current_page == 'manage_orders' %}text-warning{% else %}text-white{% endif %}">
+                        <p class="h4">Manage orders</p></a></li>
+                    <li><a href="{% url 'manage_employees' %}"
+                           class="nav-link px-3 {% if current_page == 'manage_employees' %}text-warning{% else %}text-white{% endif %}">
+                        <p class="h4">Manage employees</p></a></li>
+                    <li><a href="{% url 'manage_categories' %}"
+                           class="nav-link px-3 {% if current_page == 'manage_categories' %}text-warning{% else %}text-white{% endif %}">
+                        <p class="h4">Manage categories</p></a></li>
+                {% endif %}
             </ul>
             <div class="text-end">
-                <!-- Authentication Links -->
-                {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <a href="#" class="dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle" style="font-size: 48px;"></i>
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Login</a>
-                    <a href="{% url 'register' %}" class="btn btn-warning">Sign-up</a>
-                {% endif %}
+                <div class="d-flex align-items-center">  <!-- Flex container to align items inline -->
+                    {% if cart_item_count >= 0 %}
+                        <form class="d-inline me-2" action="{% url 'view_cart' %}" method="get">
+                            <button type="submit" class="btn btn-secondary position-relative">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor"
+                                     class="bi bi-cart" viewBox="0 0 16 16">
+                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5M3.102 4l1.313 7h8.17l1.313-7zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4m7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4m-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2m7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2"></path>
+                                </svg>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{ cart_item_count }}
+                        <span class="visually-hidden">items in cart</span>
+                    </span></button>
+                        </form>
+                    {% endif %}
+                    {% if user.is_authenticated %}
+                        <div class="dropdown">  <!-- Avatar Dropdown -->
+                            <a href="#" class="dropdown-toggle" id="dropdownMenuLink" data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <i class="bi bi-person-circle" style="font-size: 48px;"></i>
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-light me-2">Login</a>
+                        <a href="{% url 'register' %}" class="btn btn-warning">Sign-up</a>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
     </div>

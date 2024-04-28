@@ -1,0 +1,27 @@
+<div class="modal fade" id="editOrderModal{{ order.id }}" tabindex="-1" aria-labelledby="editOrderModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editOrderModalLabel">Edit Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'edit_order' order.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="orderState" class="form-label">Order state</label>
+                        <select class="form-select" id="orderState" name="orderState">
+                            <option value="Pending">Pending</option>
+                            <option value="Shipping">Shipping</option>
+                            <option value="Finished">Finished</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

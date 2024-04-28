@@ -5,7 +5,7 @@
 .ratings i{
 
     color:#cecece;
-    font-size:32px;
+    font-size:2em;
 }
 
 .rating-color{
@@ -15,7 +15,7 @@
 .review-count{
     font-weight:400;
     margin-bottom:2px;
-    font-size:24px !important;
+    font-size:1em !important;
 }
 
 .small-ratings i{
