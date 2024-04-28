@@ -39,8 +39,7 @@ def register(request):
             return redirect('register')
 
         user = User.objects.create_user(username=username, first_name=first_name, last_name=last_name,
-                                        address=address, telephone=telephone, city=city, role="C", password=password1,
-                                        email=request.POST.get('email'))
+                                        address=address, telephone=telephone, city=city, role="C", password=password1)
         login(request, user)
         return redirect('home')
     return render(request, 'registration/register2.html')
@@ -53,7 +52,7 @@ def logout_view(request):
 
 def profile(request):
     if not request.user.is_authenticated:
-        return redirect('login')  # Replace 'login' with the name of your login route
+        return redirect('login')
 
     if request.method == 'POST':
         request.user.telephone = request.POST.get('telephone')
@@ -68,6 +67,8 @@ def profile(request):
 
 
 def user_login(request):
+    if request.user.is_authenticated:
+        return redirect('home')
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
         if not form.is_valid():
@@ -75,7 +76,7 @@ def user_login(request):
             return redirect('login')
 
         login(request, form.get_user())
-        return redirect('home')  # Redirect to a home page or some other page
+        return redirect('home')
     else:
         form = AuthenticationForm()
     return render(request, 'login/login2.html', {'form': form})
@@ -83,19 +84,31 @@ def user_login(request):
 
 def products(request):
     category_list = Category.objects.all()
-    selected_category = request.GET.get('selected_category', None) # id
+    selected_category = request.GET.get('selected_category', None)
     search_query = request.GET.get('search_query', None)
 
     products = Product.objects.all()
 
     if selected_category and search_query:
-        products = products.filter(category__id=selected_category, name__icontains=search_query).prefetch_related('review_set').order_by('price')
+        products = (products.filter(category__id=selected_category, name__icontains=search_query)
+                    .filter(deleted=False)
+                    .prefetch_related('review_set')
+                    .order_by('price'))
     elif selected_category:
-        products = products.filter(category__id=selected_category).prefetch_related('review_set').order_by('price')
+        products = (products.filter(category__id=selected_category)
+                    .filter(deleted=False)
+                    .prefetch_related('review_set')
+                    .order_by('price'))
     elif search_query:
-        products = Product.objects.filter(name__icontains=search_query).prefetch_related('review_set').order_by('price')
+        products = (Product.objects.filter(name__icontains=search_query)
+                    .filter(deleted=False)
+                    .prefetch_related('review_set')
+                    .order_by('price'))
     else:
-        products = products.order_by('price').prefetch_related('review_set').order_by('price')
+        products = (products.order_by('price')
+                    .filter(deleted=False)
+                    .prefetch_related('review_set')
+                    .order_by('price'))
     return render(request, 'products/products2.html', {
         'category_list': category_list,
         'product_list': products,
@@ -118,33 +131,32 @@ def add_to_cart(request, product_id):
 
 
 def view_cart(request):
-    # Retrieve the cart from the session, defaulting to an empty dictionary if not found
     cart = request.session.get('cart', {})
 
-    # Fetch the products that are in the cart
     products = Product.objects.filter(id__in=cart.keys())
 
-    # Create a dictionary to hold cart items and their details such as quantity and total price
     cart_items = {}
     total_items = 0
     total_price = 0
 
     for product in products:
-        # Calculate quantity and total price for each product
         quantity = cart[str(product.id)]
         total_price_product = product.price * quantity
 
-        # Store the product information, quantity, and total price in the cart_items dictionary
         cart_items[product] = {
             'quantity': quantity,
             'total_price': total_price_product
         }
 
-        # Accumulate the total number of items and the overall total price
         total_items += quantity
         total_price += total_price_product
 
-    # Pass the cart items, total number of items, and total price to the template
+    for product_id in list(cart.keys()):
+        if not Product.objects.filter(id=product_id).exists():
+            cart.pop(product_id)
+    request.session['cart'] = cart
+    request.session.modified = True
+
     return render(request, 'products/view_cart.html', {
         'cart_items': cart_items,
         'total_items': total_items,
@@ -169,10 +181,9 @@ def update_cart(request):
         else:
             request.session['cart'].pop(product_id, None)
 
-        request.session.modified = True  # Ensure the session cart is saved
-        return redirect('view_cart')  # Redirect to cart view to show updated cart
+        request.session.modified = True
+        return redirect('view_cart')
 
-    # Redirect to cart page if not POST request or other error conditions
     return redirect('view_cart')
 
 
@@ -188,14 +199,14 @@ def remove_from_cart(request, product_id):
 
 def orders(request):
     if not request.user.is_authenticated:
-        return redirect('login')  # Replace 'login' with the name of your login route
+        return redirect('login')
 
-    # Check if the user has the role of a customer (or whatever roles can have orders)
     if request.user.role is 'C':
-        order_list = Order.objects.filter(customer=request.user).prefetch_related('orderproduct_set')
+        order_list = Order.objects.filter(customer=request.user).prefetch_related('orderproduct_set').order_by(
+            '-expected_delivery')
     else:
-        order_list = Order.objects.all().prefetch_related('orderproduct_set')
-
+        messages.error(request, "You must be a customer to access this page.")
+        return redirect('home')
     return render(request, 'orders/orders.html', {
         'orders': order_list,
         'cart_item_count': sum(request.session.get('cart', {}).values()),
@@ -204,10 +215,16 @@ def orders(request):
 
 
 def manage_employees(request):
-    # Logic to fetch and manage employees
     if not request.user.is_authenticated:
         return redirect('login')
-    employees = User.objects.all()
+    if not request.user.is_manager():
+        messages.error(request, "You must be a manager to access this page.")
+        return redirect('home')
+    search_query = request.GET.get('search_query', '').strip()
+    if search_query:
+        employees = User.objects.filter(username__icontains=search_query).filter(role='S')
+    else:
+        employees = User.objects.all().filter(role='S')
     return render(request, 'manage_employees/manage_employees.html', {
         'employees': employees,
         'current_page': 'manage_employees'
@@ -215,7 +232,12 @@ def manage_employees(request):
 
 
 def delete_employee(request, employee_id):
-    if request.method == 'POST':  # Ensure this is a POST request
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_manager():
+        messages.error(request, "You must be a manager to delete an employee.")
+        return redirect('home')
+    if request.method == 'POST':
         employee = get_object_or_404(User, pk=employee_id)
         employee.delete()
         return redirect("manage_employees")
@@ -223,10 +245,15 @@ def delete_employee(request, employee_id):
 
 
 def edit_employee(request, employee_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_manager():
+        messages.error(request, "You must be a manager to edit an employee.")
+        return redirect('home')
+
     employee = get_object_or_404(User, pk=employee_id)
     if request.method == 'POST':
         employee.username = request.POST.get('username')
-        employee.email = request.POST.get('email')
         employee.telephone = request.POST.get('telephone')
         employee.address = request.POST.get('address')
         employee.city = request.POST.get('city')
@@ -235,8 +262,14 @@ def edit_employee(request, employee_id):
 
 
 def manage_orders(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     orders = Order.objects.all().select_related('customer').prefetch_related('orderstate_set').prefetch_related(
-        "orderproduct_set")
+        "orderproduct_set").order_by('-expected_delivery')
     return render(request, 'manage_orders/manage_orders2.html', {
         'orders': orders,
         'current_page': 'manage_orders'
@@ -244,6 +277,12 @@ def manage_orders(request):
 
 
 def manage_categories(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     search_query = request.GET.get('search_query', '').strip()
     if search_query:
         categories = Category.objects.filter(name__icontains=search_query)
@@ -257,6 +296,12 @@ def manage_categories(request):
 
 
 def add_product(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     if request.method == 'POST':
         name = request.POST.get('productName')
         description = request.POST.get('description')
@@ -272,24 +317,32 @@ def add_product(request):
 
 
 def create_category(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     if request.method == 'POST':
-        # Extracting data from POST request using the name attributes
         name = request.POST.get('name')
         description = request.POST.get('description')
 
-        # Check if both fields are filled
         if name and description:
             Category.objects.create(name=name, description=description)
-            return redirect('manage_categories')  # Redirect to the category management page
+            return redirect('manage_categories')
         else:
-            # Handle the error if necessary fields are missing
             return HttpResponse("Both name and description are required.", status=400)
 
-    # Redirect back to the form page or handle accordingly if it's not a POST request
     return redirect('manage_categories')
 
 
 def edit_category(request, category_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     category = get_object_or_404(Category, pk=category_id)
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -298,29 +351,52 @@ def edit_category(request, category_id):
             category.name = name
             category.description = description
             category.save()
+            messages.success(request, "Category updated successfully.")
             return redirect('manage_categories')
         else:
-            return HttpResponse("Both name and description are required.", status=400)
+            messages.error(request, "Both name and description are required.")
+            return redirect('manage_categories')
     return redirect('manage_categories')
 
 
 def delete_category(request, category_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     category = get_object_or_404(Category, pk=category_id)
     if request.method == 'POST':
         category.delete()
+        messages.success(request, "Category deleted successfully.")
         return redirect('manage_categories')
     return redirect('manage_categories')
 
 
 def delete_product(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     if request.method == 'POST':  # Ensure this is a POST request
         product = get_object_or_404(Product, pk=product_id)
-        product.delete()
+        product.deleted = True
+        product.save()
+        messages.success(request, "Product deleted successfully.")
         return redirect("products")
     return redirect("products")
 
 
 def edit_product(request, product_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     product = get_object_or_404(Product, pk=product_id)
     if request.method == 'POST':
         print(request.POST)
@@ -328,7 +404,9 @@ def edit_product(request, product_id):
         product.description = request.POST.get('description')
         product.price = request.POST.get('price')
         product.amount_left = request.POST.get('amount_left')
+        product.category = Category.objects.get(id=request.POST.get('category'))
         product.save()
+        messages.success(request, "Product updated successfully.")
     return redirect("products")
 
 
@@ -352,6 +430,13 @@ def decrease_cart_quantity(request, product_id):
 
 
 def order_details(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.user.role == 'C':
+        order = Order.objects.get(id=order_id)
+        if order.customer != request.user:
+            messages.error(request, "You don't have permission to view this order.")
+            return redirect('orders')
     order = Order.objects.get(id=order_id)
     order_products = OrderProduct.objects.filter(order=order)
     return render(request, 'orders/order_details.html', {
@@ -363,8 +448,11 @@ def order_details(request, order_id):
 
 
 def create_order(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     if request.method == 'POST':
-        customer = request.user  # Assuming the user is logged in and is a customer
+        customer = request.user
         if not customer.is_authenticated:
             messages.error(request, "You must be logged in to create an order.")
             return redirect('login')
@@ -378,22 +466,21 @@ def create_order(request):
         if not customer.telephone:
             messages.error(request, "Please update your telephone number in your profile.")
             return redirect('profile')
+
         products = Product.objects.filter(id__in=cart.keys())
         for product in products:
             if cart[str(product.id)] > product.amount_left:
                 messages.error(request, f"Product {product.name} has only {product.amount_left} left in stock.")
                 return redirect('view_cart')
 
-        # Create the order
         order = Order.objects.create(
             customer=customer,
             address=customer.address,
             city=customer.city,
             state='Pending',
-            expected_delivery=datetime.now() + timedelta(days=3)  # example of setting expected delivery
+            expected_delivery=datetime.now() + timedelta(days=3)
         )
 
-        # Save each product in the order
         for product_id, quantity in cart.items():
             product = Product.objects.get(id=product_id)
             OrderProduct.objects.create(
@@ -405,24 +492,25 @@ def create_order(request):
 
         state = OrderState.objects.create(order=order, state='Pending', created_at=now())
 
-        # Clear the cart
         request.session['cart'] = {}
         request.session.modified = True
 
-        # decrease amount_left in Product
         for product_id, quantity in cart.items():
             product = Product.objects.get(id=product_id)
             product.amount_left -= quantity
             product.save()
 
-        # Redirect to the order detail page
         return redirect('order_details', order_id=order.id)
 
-    # Handle other HTTP methods or error cases
     return redirect('view_cart')
 
 
 def delete_order(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
     order = get_object_or_404(Order, pk=order_id)
     if request.method == 'POST':
         order.delete()
@@ -431,6 +519,12 @@ def delete_order(request, order_id):
 
 
 def edit_order(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_product_manager():
+        messages.error(request, "You must be a product manager to access this page.")
+        return redirect('home')
+
     order = get_object_or_404(Order, pk=order_id)
     if request.method == 'POST':
         if not request.POST.get('orderState'):
@@ -440,24 +534,47 @@ def edit_order(request, order_id):
         order.save()
 
         OrderState.objects.create(order=order, state=order.state, created_at=now())
+        messages.success(request, "Order updated successfully.")
     return redirect("manage_orders")
 
 
 def create_employee(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if not request.user.is_manager():
+        messages.error(request, "You must be a manager to access this page.")
+        return redirect('home')
+
     if request.method == 'POST':
-        # Extracting data from POST request using the name attributes
         username = request.POST.get('username')
-        email = request.POST.get('email')
         telephone = request.POST.get('telephone')
         address = request.POST.get('address')
         city = request.POST.get('city')
-        role = request.POST.get('role')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        role = 'S'
 
-        # Check if all fields are filled
-        if username and email and telephone and address and city and role:
-            User.objects.create(username=username, email=email, telephone=telephone, address=address, city=city,
-                                role=role)
-            return redirect('manage_employees')  # Redirect to the employee management page
+        if username == request.user.username:
+            messages.error(request, "You can't create an employee with the same username as yours.")
+            return redirect('manage_employees')
+
+        # generate
+        password = User.objects.make_random_password()
+
+        customer = User.objects.filter(username=username)
+        if customer:
+            messages.info(request, "Username already exists. Converting to employee.")
+            customer = customer[0]
+            customer.role = role
+            customer.save()
+            messages.success(request, "Employee created successfully. Password: " + password)
+            return redirect('manage_employees')
+
+        if username and telephone and address and city and first_name and last_name:
+            User.objects.create(username=username,  telephone=telephone, address=address, city=city,
+                                role=role, password=password)
+            messages.success(request, "Employee created successfully. Password: " + password)
+            return redirect('manage_employees')
         else:
             messages.error(request, "All fields are required.")
     return redirect('manage_employees')

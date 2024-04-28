@@ -19,6 +19,9 @@ class User(AbstractUser):
     def is_product_manager(self):
         return self.role == 'S' or self.role == 'V'
 
+    def is_customer(self):
+        return self.role == 'C';
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
@@ -30,6 +33,7 @@ class Product(models.Model):
     amount_left = models.IntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     employee = models.ForeignKey(User, on_delete=models.CASCADE)
+    deleted = models.BooleanField(default=False)
     def average_rating(self):
         reviews = self.review_set.all()
         if reviews:

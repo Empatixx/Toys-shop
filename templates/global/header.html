@@ -9,9 +9,11 @@
                 <li><a href="{% url 'products' %}"
                        class="nav-link px-3 {% if current_page == 'products' %}text-warning{% else %}text-white{% endif %}">
                     <p class="h4">Products</p></a></li>
-                <li><a href="{% url 'orders' %}"
-                       class="nav-link px-3 {% if current_page == 'orders' %}text-warning{% else %}text-white{% endif %}">
-                    <p class="h4">Orders</p></a></li>
+                {% if user.is_customer %}
+                    <li><a href="{% url 'orders' %}"
+                           class="nav-link px-3 {% if current_page == 'orders' %}text-warning{% else %}text-white{% endif %}">
+                        <p class="h4">Orders</p></a></li>
+                {% endif %}
                 {% if user.is_product_manager %}
                     <li><a href="{% url 'manage_orders' %}"
                            class="nav-link px-3 {% if current_page == 'manage_orders' %}text-warning{% else %}text-white{% endif %}">

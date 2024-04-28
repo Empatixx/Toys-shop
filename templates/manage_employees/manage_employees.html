@@ -18,7 +18,7 @@
                             data-bs-target="#createEmployeeModal">
                         Add Employee
                     </button>
-                    <form action="{% url 'manage_categories' %}" method="get" class="d-flex">
+                    <form action="{% url 'manage_employees' %}" method="get" class="d-flex">
                         <input class="form-control me-2" type="search" placeholder="Search employees"
                                aria-label="Search"
                                name="search_query">
@@ -42,7 +42,7 @@
                         <tr>
                             <td>{{ employee.first_name }}</td>
                             <td>{{ employee.last_name }}</td>
-                            <td>{{ employee.email }}</td>
+                            <td>{{ employee.username }}</td>
                             <td>{{ employee.telephone }}</td>
                             <td>{{ employee.address }}</td>
                             <td>{{ employee.city }}</td>
