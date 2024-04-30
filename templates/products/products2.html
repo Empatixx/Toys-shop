@@ -13,6 +13,7 @@
         .grid-container {
             min-height: 80vh;
         }
+
         .ratings .fa {
             color: #ccc; /* Default color of stars */
             cursor: pointer;
@@ -53,7 +54,8 @@
                     {% if selected_category %}
                         <script>
                             document.querySelector("#listGroupRadios{{ selected_category }}").checked = true;
-                            document.getElementById('selected_category').value = {{ selected_category }}
+                            document.getElementById('selected_category').value =
+                            {{ selected_category }}
                         </script>
                     {% endif %}
                 </div>
@@ -65,9 +67,9 @@
                 <div class="d-flex mb-5 align-items-center">
                     {% if user.is_product_manager %}
                         <button type="button" class="btn btn-warning btn-lg" data-bs-toggle="modal"
-                            data-bs-target="#createProductModal">
-                        Add product
-                    </button>
+                                data-bs-target="#createProductModal">
+                            Add product
+                        </button>
                     {% endif %}
                     <form class="flex-fill ms-3" action="{% url 'products' %}" method="get">
                         <!-- Using flex-fill to make the form take the remaining space -->
@@ -139,9 +141,17 @@
                                     </ul>
                                     <form action="{% url 'add_to_cart' product.id %}" method="post">
                                         {% csrf_token %}
-                                        <button type="submit" class="w-100 btn btn-lg btn-primary">
-                                            Add to Cart
-                                        </button>
+                                        {% if user.is_customer or not user.is_authenticated %}
+                                            {% if not product.deleted %}
+                                                <button type="submit" class="w-100 btn btn-lg btn-primary">
+                                                    Add to Cart
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="w-100 btn btn-lg btn-secondary" disabled>
+                                                    Not available
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
                                     </form>
                                 </div>
                             </div>

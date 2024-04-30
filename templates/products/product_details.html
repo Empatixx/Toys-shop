@@ -95,7 +95,17 @@
                                             <form method="post" action="{% url 'add_to_cart' product.id %}"
                                                   style="display: inline;">
                                                 {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary me-2">Add to cart</button>
+                                                {% if user.is_customer or not user.is_authenticated %}
+                                                    {% if not product.deleted %}
+                                                        <button type="submit" class="me-2 btn btn-primary">
+                                                            Add to Cart
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="me-2 btn btn-secondary" disabled>
+                                                            Not available
+                                                        </button>
+                                                    {% endif %}
+                                                {% endif %}
                                             </form>
                                         </div>
                                     </div>

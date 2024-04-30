@@ -91,24 +91,20 @@ def products(request):
 
     if selected_category and search_query:
         products = (products.filter(category__id=selected_category, name__icontains=search_query)
-                    .filter(deleted=False)
                     .prefetch_related('review_set')
-                    .order_by('price'))
+                    .order_by('deleted', 'price'))
     elif selected_category:
         products = (products.filter(category__id=selected_category)
-                    .filter(deleted=False)
                     .prefetch_related('review_set')
-                    .order_by('price'))
+                    .order_by('deleted', 'price'))
     elif search_query:
         products = (Product.objects.filter(name__icontains=search_query)
-                    .filter(deleted=False)
                     .prefetch_related('review_set')
-                    .order_by('price'))
+                    .order_by('deleted', 'price'))
     else:
         products = (products.order_by('price')
-                    .filter(deleted=False)
                     .prefetch_related('review_set')
-                    .order_by('price'))
+                    .order_by('deleted', 'price'))
     return render(request, 'products/products2.html', {
         'category_list': category_list,
         'product_list': products,

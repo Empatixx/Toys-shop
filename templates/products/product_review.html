@@ -1,26 +1,37 @@
 <div class="card mb-2">
     <div class="card-body">
         <h5 class="card-title">
-            {{ review.customer.username }}
+            <div class="row">
+                <div class="col col-md-8">
+                    <div class="text-start mt-2">
+                        <i class="fa fa-user"></i>
+                        {{ review.customer.first_name }} {{ review.customer.last_name }}
+                    </div>
+                </div>
+                <div class="col col-md-4">
+                    <div class="text-end">
+                        <div class="ratings">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                    <i class="fa fa-star
+                                    rating-color"></i>  <!-- Filled star -->
+                                {% else %}
+                                    <i class="fa fa-star
+                                    "></i>  <!-- Unfilled star -->
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </h5>
         <div class="row">
-            <div class="col col-md-10">
+            <div class="col col-md-15">
                 <p class="card-text">
                 <div class="alert alert-info" role="alert">
                     {{ review.review_text }}
                 </div>
                 </p>
-            </div>
-            <div class="col text-end">
-                <div class="ratings">
-                    {% for i in "12345" %}
-                        {% if forloop.counter <= review.rating %}
-                            <i class="fa fa-star rating-color"></i>  <!-- Filled star -->
-                        {% else %}
-                            <i class="fa fa-star"></i>  <!-- Unfilled star -->
-                        {% endif %}
-                    {% endfor %}
-                </div>
             </div>
         </div>
     </div>
